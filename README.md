@@ -73,6 +73,9 @@ Teams' own shortcuts (e.g. `Ctrl+Shift+M` to mute) work as usual.
 - Teams' meeting launcher page may ask how to join; choose *Continue on this
   browser*.
 - System audio sharing isn't available on Linux.
+- Passkeys / security keys can't be used to sign in (Electron has no WebAuthn
+  UI on Linux). The app reports WebAuthn as unsupported so Microsoft offers
+  other methods instead (Authenticator approval, code, password).
 
 ## Development
 

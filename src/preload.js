@@ -1,6 +1,6 @@
 'use strict';
 
-const { contextBridge, ipcRenderer, webFrame } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('teamsDesk', {
   focus: () => ipcRenderer.send('teams-desk:focus'),
@@ -27,4 +27,20 @@ function wrapNotification() {
   window.Notification = DeskNotification;
 }
 
-webFrame.executeJavaScript(`(${wrapNotification.toString()})();`).catch(() => {});
+// Electron has no WebAuthn UI on Linux, so passkey / security-key prompts
+// ("Face, fingerprint, PIN or security key") wait forever. Report WebAuthn as
+// unsupported so Microsoft sign-in offers the other methods straight away.
+function hideWebAuthn() {
+  delete window.PublicKeyCredential;
+  const creds = navigator.credentials;
+  if (!creds) return;
+  const unsupported = () => Promise.reject(new DOMException('WebAuthn is not available in this app', 'NotSupportedError'));
+  const get = creds.get.bind(creds);
+  const create = creds.create.bind(creds);
+  creds.get = (options) => (options && options.publicKey ? unsupported() : get(options));
+  creds.create = (options) => (options && options.publicKey ? unsupported() : create(options));
+}
+
+// Synchronous, so both are in place before any page script runs.
+contextBridge.executeInMainWorld({ func: hideWebAuthn });
+contextBridge.executeInMainWorld({ func: wrapNotification });
