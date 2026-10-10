@@ -53,17 +53,16 @@
       ],
       "executableName": "teams-desk",
       "icon": "assets/icon-512.png",
-      "category": "Network",
+      "category": "Network;Chat;InstantMessaging",
       "synopsis": "Unofficial Microsoft Teams client with a working GNOME tray icon",
       "maintainer": "Chamil Kandamby <chamil.kandamby@gmail.com>",
       "desktop": {
         "entry": {
           "Name": "Teams Desk",
           "GenericName": "Microsoft Teams client",
-          "Comment": "Microsoft Teams with a tray icon that survives screen locks",
           "StartupWMClass": "teams-desk",
-          "Categories": "Network;Chat;InstantMessaging;",
-          "Keywords": "teams;microsoft;chat;meeting;call;"
+          "Keywords": "teams;microsoft;chat;meeting;call;",
+          "Actions": "new-window;"
         },
         "desktopActions": {
           "new-window": {
