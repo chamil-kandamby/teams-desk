@@ -2,21 +2,103 @@
   "name": "teams-desk",
   "productName": "Teams Desk",
   "version": "0.1.0",
-  "description": "Microsoft Teams web app wrapper for GNOME/Wayland with a tray icon that survives screen locks",
+  "description": "Unofficial Microsoft Teams client for Linux (GNOME/Wayland) with a working tray icon and separate meeting windows",
   "main": "src/main.js",
   "desktopName": "teams-desk.desktop",
   "license": "MIT",
   "private": true,
+  "author": {
+    "name": "Chamil Kandamby",
+    "email": "chamil.kandamby@gmail.com"
+  },
+  "homepage": "https://github.com/chamil-kandamby/teams-desk",
+  "repository": "github:chamil-kandamby/teams-desk",
   "scripts": {
     "start": "electron .",
     "test": "node --test test/*.test.js",
     "icons": "python3 scripts/make-icons.py",
-    "install-desktop": "bash scripts/install.sh"
+    "install-desktop": "bash scripts/install.sh",
+    "dist": "electron-builder --linux --publish never",
+    "dist:win": "electron-builder --win --publish never"
   },
   "dependencies": {
     "dbus-next": "0.10.2"
   },
   "devDependencies": {
-    "electron": "44.5.1"
+    "electron": "44.5.1",
+    "electron-builder": "26.16.1"
+  },
+  "build": {
+    "appId": "io.github.chamil_kandamby.teams_desk",
+    "artifactName": "${name}-${version}-${arch}.${ext}",
+    "files": [
+      "src/**",
+      "assets/**",
+      "package.json"
+    ],
+    "protocols": [
+      {
+        "name": "Microsoft Teams link",
+        "schemes": [
+          "msteams"
+        ]
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "rpm",
+        "deb",
+        "tar.gz"
+      ],
+      "executableName": "teams-desk",
+      "icon": "assets/icon-512.png",
+      "category": "Network",
+      "synopsis": "Unofficial Microsoft Teams client with a working GNOME tray icon",
+      "maintainer": "Chamil Kandamby <chamil.kandamby@gmail.com>",
+      "desktop": {
+        "entry": {
+          "Name": "Teams Desk",
+          "GenericName": "Microsoft Teams client",
+          "Comment": "Microsoft Teams with a tray icon that survives screen locks",
+          "StartupWMClass": "teams-desk",
+          "Categories": "Network;Chat;InstantMessaging;",
+          "Keywords": "teams;microsoft;chat;meeting;call;"
+        },
+        "desktopActions": {
+          "new-window": {
+            "Name": "New Window",
+            "Exec": "teams-desk --new-window"
+          }
+        }
+      }
+    },
+    "publish": null,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon-512.png",
+      "executableName": "TeamsDesk",
+      "artifactName": "${name}-${version}-win-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Teams Desk",
+      "artifactName": "${name}-${version}-win-setup-${arch}.${ext}"
+    }
   }
 }

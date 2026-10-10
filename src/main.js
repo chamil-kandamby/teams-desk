@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { app, BrowserWindow, Menu, Notification, clipboard, ipcMain, session } = require('electron');
+const { app, BrowserWindow, Menu, Notification, clipboard, ipcMain, nativeImage, session } = require('electron');
 const links = require('./links');
 const autostart = require('./autostart');
 const { parseUnread } = require('./unread');
@@ -13,14 +13,19 @@ const { setupSession } = require('./session');
 
 const APP_ID = 'teams-desk';
 const DESKTOP_ID = `${APP_ID}.desktop`;
+const WINDOWS_APP_ID = 'io.github.chamil_kandamby.teams_desk'; // = build.appId; toasts need it
 const LAUNCHER = path.resolve(__dirname, '..', 'bin', 'teams-desk');
 
-app.setPath('userData', path.join(app.getPath('appData'), APP_ID));
+// TEAMS_DESK_DATA_DIR runs a separate, isolated instance (e.g. to try a build
+// while the normal one keeps running).
+app.setPath('userData', process.env.TEAMS_DESK_DATA_DIR || path.join(app.getPath('appData'), APP_ID));
 
 // Present as plain Chrome; Teams degrades features for browsers it doesn't recognise.
 const chromeMajor = process.versions.chrome.split('.')[0];
-app.userAgentFallback = `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeMajor}.0.0.0 Safari/537.36`;
-app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer');
+const uaPlatform = process.platform === 'win32' ? 'Windows NT 10.0; Win64; x64' : 'X11; Linux x86_64';
+app.userAgentFallback = `Mozilla/5.0 (${uaPlatform}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeMajor}.0.0.0 Safari/537.36`;
+if (process.platform === 'linux') app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer');
+if (process.platform === 'win32') app.setAppUserModelId(WINDOWS_APP_ID);
 
 const startHidden = process.argv.includes('--hidden');
 
@@ -28,6 +33,13 @@ let settings;
 let windows;
 let tray;
 let bus = null;
+
+// What "Start on login" runs: the AppImage, the installed binary, or the
+// source-tree launcher.
+function launchCommand() {
+  if (process.env.APPIMAGE) return process.env.APPIMAGE;
+  return app.isPackaged ? process.execPath : LAUNCHER;
+}
 
 function linkFromArgs(argv) {
   return argv.slice(1).map(links.toTeamsUrl).find(Boolean) || null;
@@ -72,7 +84,7 @@ function buildTrayMenu() {
       label: 'Start on login',
       type: 'checkbox',
       checked: autostart.isEnabled(),
-      click: (item) => autostart.setEnabled(item.checked, LAUNCHER),
+      click: (item) => autostart.setEnabled(item.checked, launchCommand()),
     },
     { label: 'Reload Teams', click: () => windows.main.reload() },
     { label: 'Quit', click: () => app.quit() },
@@ -84,9 +96,18 @@ function onTitle(title) {
   if (count === tray.count) return;
   tray.setCount(count);
   if (bus) bus.setLauncherCount(count);
+  if (process.platform === 'win32') {
+    const badge = count ? nativeImage.createFromPath(path.join(__dirname, '..', 'assets', 'badge', `badge-${Math.min(count, 10)}.png`)) : null;
+    windows.main.setOverlayIcon(badge, count ? `${count} unread` : '');
+  }
 }
 
+// Linux only: the tray watcher and the Unity launcher count live on D-Bus.
 async function connectBus() {
+  if (process.platform !== 'linux') {
+    tray.setWatcherPresent(true);
+    return;
+  }
   bus = new DesktopBus(DESKTOP_ID);
   bus.on('watcher', (present) => {
     console.log(`[tray] StatusNotifierWatcher ${present ? 'appeared' : 'went away'}`);

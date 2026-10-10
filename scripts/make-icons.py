@@ -72,6 +72,20 @@ def tray_icon(label):
     return tile.resize((size, size), Image.LANCZOS)
 
 
+def badge_icon(label):
+    """Badge alone, for the Windows taskbar overlay."""
+    size = 32
+    big = size * SS
+    img = Image.new("RGBA", (big, big), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    ring = round(big * 0.06)
+    draw.ellipse((0, 0, big - 1, big - 1), fill=WHITE)
+    draw.ellipse((ring, ring, big - 1 - ring, big - 1 - ring), fill=BADGE + (255,))
+    font = ImageFont.truetype(FONT, round(big * (0.62 if len(label) == 1 else 0.46)))
+    draw_centered(draw, (0, 0, big, big), label, font, WHITE)
+    return img.resize((size, size), Image.LANCZOS)
+
+
 def main():
     ASSETS.mkdir(exist_ok=True)
     (ASSETS / "tray").mkdir(exist_ok=True)
@@ -81,6 +95,10 @@ def main():
     for n in range(1, 10):
         tray_icon(str(n)).save(ASSETS / "tray" / f"tray-{n}.png")
     tray_icon("9+").save(ASSETS / "tray" / "tray-10.png")
+    (ASSETS / "badge").mkdir(exist_ok=True)
+    for n in range(1, 10):
+        badge_icon(str(n)).save(ASSETS / "badge" / f"badge-{n}.png")
+    badge_icon("9+").save(ASSETS / "badge" / "badge-10.png")
     print(f"icons written to {ASSETS}")
 
 

@@ -106,7 +106,7 @@ class WindowManager {
     if (win.isMinimized()) win.restore();
     // Wayland ignores focus() on an already-mapped window without an activation
     // token; GNOME does focus a freshly mapped one, so re-map it.
-    if (win.isVisible() && !win.isFocused()) win.hide();
+    if (process.platform === 'linux' && win.isVisible() && !win.isFocused()) win.hide();
     win.show();
     win.focus();
   }

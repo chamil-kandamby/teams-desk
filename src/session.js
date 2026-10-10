@@ -1,7 +1,8 @@
 'use strict';
 
-const { app, desktopCapturer } = require('electron');
+const { app } = require('electron');
 const links = require('./links');
+const { displayMediaHandler } = require('./screen-share');
 
 // Permissions granted to Teams/Microsoft origins only.
 const GRANTED = new Set([
@@ -31,17 +32,7 @@ function setupSession(ses, { isPrimary }) {
     return GRANTED.has(permission) && links.isTrusted(requestingOrigin);
   });
 
-  // On Wayland, getSources() opens the xdg-desktop-portal picker and returns the
-  // single screen or window the user chose.
-  ses.setDisplayMediaRequestHandler((request, callback) => {
-    if (!links.isTrusted(request.securityOrigin)) return callback({});
-    desktopCapturer.getSources({ types: ['screen', 'window'] })
-      .then((sources) => callback(sources.length ? { video: sources[0] } : {}))
-      .catch((err) => {
-        console.error('[share] screen picker failed:', err.message);
-        callback({});
-      });
-  });
+  ses.setDisplayMediaRequestHandler(displayMediaHandler(links.isTrusted));
 
   const wanted = app.getPreferredSystemLanguages();
   const available = new Set(ses.availableSpellCheckerLanguages);

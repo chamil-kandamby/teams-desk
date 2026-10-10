@@ -27,9 +27,9 @@ function wrapNotification() {
   window.Notification = DeskNotification;
 }
 
-// Electron has no WebAuthn UI on Linux, so passkey / security-key prompts
-// ("Face, fingerprint, PIN or security key") wait forever. Report WebAuthn as
-// unsupported so Microsoft sign-in offers the other methods straight away.
+// Electron has no WebAuthn UI on Linux (Windows has Windows Hello), so passkey /
+// security-key prompts ("Face, fingerprint, PIN or security key") wait forever.
+// Report WebAuthn as unsupported so Microsoft sign-in offers other methods.
 function hideWebAuthn() {
   delete window.PublicKeyCredential;
   const creds = navigator.credentials;
@@ -42,5 +42,5 @@ function hideWebAuthn() {
 }
 
 // Synchronous, so both are in place before any page script runs.
-contextBridge.executeInMainWorld({ func: hideWebAuthn });
+if (process.platform === 'linux') contextBridge.executeInMainWorld({ func: hideWebAuthn });
 contextBridge.executeInMainWorld({ func: wrapNotification });
