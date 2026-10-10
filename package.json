@@ -1,0 +1,22 @@
+{
+  "name": "teams-desk",
+  "productName": "Teams Desk",
+  "version": "0.1.0",
+  "description": "Microsoft Teams web app wrapper for GNOME/Wayland with a tray icon that survives screen locks",
+  "main": "src/main.js",
+  "desktopName": "teams-desk.desktop",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "icons": "python3 scripts/make-icons.py",
+    "install-desktop": "bash scripts/install.sh"
+  },
+  "dependencies": {
+    "dbus-next": "0.10.2"
+  },
+  "devDependencies": {
+    "electron": "44.5.1"
+  }
+}

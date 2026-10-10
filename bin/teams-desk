@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Launches Teams Desk with the Electron runtime from node_modules.
+set -euo pipefail
+APP_DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+ELECTRON="$APP_DIR/node_modules/electron/dist/electron"
+if [[ ! -x "$ELECTRON" ]]; then
+  echo "Electron runtime missing; run: npm ci && node node_modules/electron/install.js" >&2
+  exit 1
+fi
+# Wayland app_id / X11 WM_CLASS, so GNOME matches windows to teams-desk.desktop.
+export CHROME_DESKTOP=teams-desk.desktop
+exec "$ELECTRON" "$APP_DIR" --class=teams-desk "$@"
